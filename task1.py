@@ -1,4 +1,5 @@
 import collections
+import config
 
 def read_file_content(file_path):
     try:
@@ -65,14 +66,13 @@ def main():
     original_text = read_file_content(text_file_path)
     if original_text is None:
         return
-
-    encryption_shift = 3
+    
     print("Original text:")
     print(original_text)
     print("\n---------------------------------------------------------\n")
     # 1. Encrypt the text using Caesar cipher with a shift of 3
-    print(f"1. Encrypting text with Caesar cipher (shift = {encryption_shift})...")
-    encrypted_text = caesar_cipher(original_text, encryption_shift, 'encrypt')
+    print(f"1. Encrypting text with Caesar cipher (shift = {config.ENCRYPTION_SHIFT})...")
+    encrypted_text = caesar_cipher(original_text, config.ENCRYPTION_SHIFT, 'encrypt')
     print("Encrypted text:")
     print(encrypted_text)
     print("\n---------------------------------------------------------\n")
@@ -92,16 +92,21 @@ def main():
     print("\n---------------------------------------------------------\n")
     # 4. Check if the decrypted text matches the original
     print("4. Verifying decryption...")
-    if found_shift == encryption_shift:
-        print(f"SUCCESS: The calculated shift ({found_shift}) matches the original encryption shift ({encryption_shift}).")
+    if found_shift == config.ENCRYPTION_SHIFT:
+        print(f"SUCCESS: The calculated shift ({found_shift}) matches the original encryption shift ({config.ENCRYPTION_SHIFT}).")
         # Using strip() to handle potential trailing whitespace differences
         if original_text.strip() == decrypted_text.strip():
              print("SUCCESS: The decrypted text matches the original text.")
         else:
              print("NOTE: The decrypted text does not perfectly match the original. This could be due to whitespace or other minor differences.")
     else:
-        print(f"FAILURE: The calculated shift ({found_shift}) does not match the original encryption shift ({encryption_shift}).")
+        print(f"FAILURE: The calculated shift ({found_shift}) does not match the original encryption shift ({config.ENCRYPTION_SHIFT}).")
         print("This can happen if the text is too short or has an unusual letter distribution where 'e' is not the most frequent letter in the original text.")
-
+    # 5. Decrypt the text using the known shift for comparison
+    print("\n5. Decrypting text using the known shift for comparison...")
+    known_decrypted_text = caesar_cipher(encrypted_text, config.ENCRYPTION_SHIFT, 'decrypt')
+    print("Decrypted text using known shift:")
+    print(known_decrypted_text)
+    
 if __name__ == "__main__":
     main()
