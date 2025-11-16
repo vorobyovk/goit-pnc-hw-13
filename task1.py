@@ -1,7 +1,9 @@
+import collections
+
 def read_file_content(file_path):
     try:
-        with open(file_path, 'r') as file:
-            return file.read().strip()
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
     except FileNotFoundError:
         print(f"Error: File not found at path: {file_path}")
         return None
@@ -9,115 +11,97 @@ def read_file_content(file_path):
         print(f"Error reading file {file_path}: {e}")
         return None
 
-
-def vigenere_cipher(text, key, mode='encrypt'):    
+def caesar_cipher(text, shift, mode='encrypt'):
     result = []
-    key_len = len(key)
-    for i, char in enumerate(text):
-        if char == ' ':
-            result.append(' ')  # Keep spaces as they are
-            continue
-
-        key_char = key[i % key_len]
-        key_shift = ord(key_char.lower()) - ord('a')
-
-        if 'encrypt' == mode:
-            shifted_char = chr(((ord(char.lower()) - ord('a') + key_shift) % 26) + ord('a'))
-        elif 'decrypt' == mode:
-            shifted_char = chr(((ord(char.lower()) - ord('a') - key_shift + 26) % 26) + ord('a'))
+    for char in text:
+        if 'a' <= char <= 'z':
+            start = ord('a')
+            if mode == 'encrypt':
+                shifted_char_code = (ord(char) - start + shift) % 26 + start
+            else:  # decrypt
+                shifted_char_code = (ord(char) - start - shift + 26) % 26 + start
+            result.append(chr(shifted_char_code))
+        elif 'A' <= char <= 'Z':
+            start = ord('A')
+            if mode == 'encrypt':
+                shifted_char_code = (ord(char) - start + shift) % 26 + start
+            else:  # decrypt
+                shifted_char_code = (ord(char) - start - shift + 26) % 26 + start
+            result.append(chr(shifted_char_code))
         else:
-            raise ValueError("Invalid mode. Choose 'encrypt' or 'decrypt'.")
-        
-        # Keep the original case
-        if char.isupper():
-            shifted_char = shifted_char.upper()
-        
-        result.append(shifted_char)
-    return ''.join(result)
+            result.append(char)
+    return "".join(result)
 
-def kasiski_examination(ciphertext):
-    # 1. Find repeated sequences in the ciphertext
-    sequence_lengths = range(3, 6)  # Consider sequences of length 3 to 5
-    sequence_occurrences = {}
+def frequency_analysis(text):
+    """Counts the frequency of each letter in the text."""
+    text = text.lower()
+    frequencies = collections.Counter(c for c in text if 'a' <= c <= 'z')
+    return frequencies
 
-    for seq_len in sequence_lengths:
-        for i in range(len(ciphertext) - seq_len + 1):
-            sequence = ciphertext[i:i + seq_len]
-            occurrences = [j for j in range(len(ciphertext)) if ciphertext.startswith(sequence, j)]
-            if len(occurrences) > 1:
-                sequence_occurrences[sequence] = occurrences
+def decrypt_with_frequency_analysis(ciphertext):
+    """
+    Decrypts a Caesar-ciphered text using frequency analysis.
+    Returns the decrypted text and the found shift.
+    """
+    frequencies = frequency_analysis(ciphertext)
+    if not frequencies:
+        print("No letters found in the ciphertext for frequency analysis.")
+        return "", 0
+    # The most frequent letter in English is 'e'.
+    # Find the most frequent letter in the ciphertext.
+    most_frequent_char = frequencies.most_common(1)[0][0]
+    print(f"Most frequent character in ciphertext: '{most_frequent_char}'")
+    print("Assuming it corresponds to 'e' in plaintext...")
+    # Calculate the shift by assuming the most frequent character in the ciphertext
+    # corresponds to 'e' in the plaintext.
+    shift = (ord(most_frequent_char) - ord('e')) % 26
+    # Decrypt the text using the found shift
+    decrypted_text = caesar_cipher(ciphertext, shift, 'decrypt')
+    return decrypted_text, shift
 
-    # 2. Calculate distances between repeated sequences
-    distances = []
-    for sequence, occurrences in sequence_occurrences.items():
-        for i in range(len(occurrences) - 1):
-            distances.append(occurrences[i+1] - occurrences[i])
-
-    # 3. Find the most frequent factors of the distances
-    factors = []
-    for distance in distances:
-        for i in range(2, distance + 1):  # Check factors from 2 to distance
-            if distance % i == 0:
-                factors.append(i)
-
-    # Count frequency of each factor
-    factor_counts = {}
-    for factor in factors:
-        if factor in factor_counts:
-            factor_counts[factor] += 1
-        else:
-            factor_counts[factor] = 1
-
-    # Sort factors by frequency
-    sorted_factors = sorted(factor_counts.items(), key=lambda x: x[1], reverse=True)
-
-    # Return a list of possible key lengths (factors), sorted by frequency
-    possible_key_lengths = [factor for factor, count in sorted_factors]
-    return possible_key_lengths
-
-
-def main():    
+def main():
+    """Main function to run the Caesar cipher analysis."""
     text_file_path = "text.txt"
-    config_file_path = "config.txt"
-
-    text = read_file_content(text_file_path)
-    if text is None:
+    original_text = read_file_content(text_file_path)
+    if original_text is None:
         return
 
-    config_content = read_file_content(config_file_path)
-    if config_content is None:
-        return
-
-    # Extract key from config content
-    key_prefix = "KEY-VEGINER = \""
-    if key_prefix in config_content:
-        key_start_index = config_content.find(key_prefix) + len(key_prefix)
-        key_end_index = config_content.find("\"", key_start_index)
-        if key_end_index != -1:
-            key = config_content[key_start_index:key_end_index]
+    encryption_shift = 3
+    print("Original text:")
+    print(original_text)
+    print("\n---------------------------------------------------------\n")
+    # 1. Encrypt the text using Caesar cipher with a shift of 3
+    print(f"1. Encrypting text with Caesar cipher (shift = {encryption_shift})...")
+    encrypted_text = caesar_cipher(original_text, encryption_shift, 'encrypt')
+    print("Encrypted text:")
+    print(encrypted_text)
+    print("\n---------------------------------------------------------\n")
+    # 2. Perform frequency analysis on the encrypted text
+    print("2. Performing frequency analysis on encrypted text...")
+    letter_frequencies = frequency_analysis(encrypted_text)
+    sorted_frequencies = sorted(letter_frequencies.items(), key=lambda item: item[1], reverse=True)
+    print("Letter frequencies (most common first):")
+    print(sorted_frequencies)
+    print("\n---------------------------------------------------------\n")
+    # 3. Decrypt the text using frequency analysis
+    print("3. Decrypting text using frequency analysis...")
+    decrypted_text, found_shift = decrypt_with_frequency_analysis(encrypted_text)
+    print(f"\nCalculated shift based on frequency analysis: {found_shift}")
+    print("Decrypted text:")
+    print(decrypted_text)
+    print("\n---------------------------------------------------------\n")
+    # 4. Check if the decrypted text matches the original
+    print("4. Verifying decryption...")
+    if found_shift == encryption_shift:
+        print(f"SUCCESS: The calculated shift ({found_shift}) matches the original encryption shift ({encryption_shift}).")
+        # Using strip() to handle potential trailing whitespace differences
+        if original_text.strip() == decrypted_text.strip():
+             print("SUCCESS: The decrypted text matches the original text.")
         else:
-            print("Error: Key value not properly formatted in config file.")
-            return
+             print("NOTE: The decrypted text does not perfectly match the original. This could be due to whitespace or other minor differences.")
     else:
-        print("Error: KEY-VEGINER not found in config file.")
-        return
-    
-    # Encrypt the text
-    encrypted_text = vigenere_cipher(text, key, 'encrypt')
-    print("Encrypted text:", encrypted_text)
-    print("Length of encrypted text:", len(encrypted_text))
-    print("---------------------------------------------------------")
-    # Decrypt the text
-    decrypted_text = vigenere_cipher(encrypted_text, key, 'decrypt')
-    print("Decrypted text:", decrypted_text)
-    print("Length of decrypted text:", len(decrypted_text))
-    print("---------------------------------------------------------")
-    # Perform Kasiski examination to find possible key lengths
-    possible_key_lengths = kasiski_examination(encrypted_text)
-    if possible_key_lengths:
-        print("\nPossible key lengths (Kasiski examination):", possible_key_lengths)
-    else:
-        print("\nNo repeated sequences found. Kasiski examination could not determine key length.")
+        print(f"FAILURE: The calculated shift ({found_shift}) does not match the original encryption shift ({encryption_shift}).")
+        print("This can happen if the text is too short or has an unusual letter distribution where 'e' is not the most frequent letter in the original text.")
 
 if __name__ == "__main__":
     main()
