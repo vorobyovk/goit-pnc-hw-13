@@ -62,8 +62,7 @@ def find_repeated_sequences_distances(text, min_len=3, max_len=5):
             sequence = text[i:i + seq_len]
             if sequence not in sequences:
                 sequences[sequence] = []
-            sequences[sequence].append(i)
-        
+            sequences[sequence].append(i)        
         for sequence, positions in sequences.items():
             if len(positions) > 1:
                 for i in range(len(positions) - 1):
@@ -92,16 +91,12 @@ def kasiski_examination(ciphertext):
     all_factors = []
     for dist in distances:
         all_factors.extend(get_factors(dist))
-
-    factor_counts = collections.Counter(all_factors)
-    
+    factor_counts = collections.Counter(all_factors)    
     # We are interested in key lengths in a reasonable range, e.g., 3 to 20
     most_likely_lengths = [length for length, count in factor_counts.most_common(10) if 3 <= length <= 20]
-
     if not most_likely_lengths:
         print("Could not determine a likely key length from factors.")
-        return 0
-    
+        return 0    
     key_length = most_likely_lengths[0]
     print(f"Most common factors (potential key lengths): {factor_counts.most_common(5)}")
     print(f"Estimated key length: {key_length}")
@@ -112,9 +107,7 @@ def find_key_char(column):
     frequencies = frequency_analysis(column)
     if not frequencies:
         return 'a'  # Default to 'a' if no letters are in the column
-
-    most_frequent_char = frequencies.most_common(1)[0][0]
-    
+    most_frequent_char = frequencies.most_common(1)[0][0]    
     # Shift is the difference between the most frequent char and 'e'
     shift = (ord(most_frequent_char) - ord(ENGLISH_MOST_FREQUENT_CHAR)) % 26
     return chr(ord('a') + shift)
@@ -125,12 +118,10 @@ def crack_vigenere(ciphertext):
     if key_length == 0:
         print("Could not determine key length. Aborting crack attempt.")
         return "", "", 0
-
     # Split ciphertext into columns based on key length
     # Only consider alphabetic characters for splitting
     only_letters = "".join(filter(str.isalpha, ciphertext))
     columns = [only_letters[i::key_length] for i in range(key_length)]
-
     # Find the key
     found_key = ""
     for i, column in enumerate(columns):
