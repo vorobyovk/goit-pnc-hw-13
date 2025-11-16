@@ -150,7 +150,7 @@ def crack_vigenere(ciphertext):
     return decrypted_text, found_key, key_length
     
 def main():
-    text_file_path = "text2.txt"
+    text_file_path = "text3.txt"
     original_key = config.KEY
 
     original_text = read_file_content(text_file_path)
