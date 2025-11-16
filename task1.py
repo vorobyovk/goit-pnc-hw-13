@@ -62,7 +62,7 @@ def decrypt_with_frequency_analysis(ciphertext):
 
 def main():
     """Main function to run the Caesar cipher analysis."""
-    text_file_path = "text.txt"
+    text_file_path = "text2.txt"
     original_text = read_file_content(text_file_path)
     if original_text is None:
         return
@@ -107,6 +107,6 @@ def main():
     known_decrypted_text = caesar_cipher(encrypted_text, config.ENCRYPTION_SHIFT, 'decrypt')
     print("Decrypted text using known shift:")
     print(known_decrypted_text)
-    
+
 if __name__ == "__main__":
     main()
